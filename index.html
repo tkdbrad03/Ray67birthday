@@ -1187,7 +1187,11 @@ photosSection +
                 return;
             }
             
-            await initData();
+            const initialData = {
+                players: {},
+                photos: []
+            };
+            await dataRef.set(initialData);
             await updateDashboard();
             alert('All data has been cleared. Starting fresh!');
         }
@@ -1293,9 +1297,11 @@ photosSection +
             
             players[currentUser].coins.push({
                 type: type,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                playerName: currentUser
             });
             
+            data.players = players;  // THIS WAS MISSING!
             await saveData(data);
             await updateDashboard();
             closeModal();
