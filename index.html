@@ -1456,6 +1456,7 @@ function stopRecording() {
                 audio: audioData
             });
             
+            data.players = players;  // THIS WAS MISSING!
             await saveData(data);
             await updateDashboard();
             closeVoiceModal();
