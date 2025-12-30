@@ -325,6 +325,10 @@
             text-align: center;
             padding: 20px 0;
         }
+        #submitStoryBtn {
+            display: none;
+            margin-top: 20px;
+        }
         .record-button {
             width: 100px;
             height: 100px;
@@ -883,11 +887,11 @@
         <div class="modal-content">
             <h2>Record Birthday Message</h2>
             <div class="voice-recorder">
-                <button class="record-button" id="recordButton" onclick="toggleRecording()">🎤</button>
+                <button class="record-button" id="recordBtn" onclick="toggleRecording()">🎤 Start Recording</button>
                 <div class="timer" id="recordTimer">00:00</div>
                 <p style="color: #666; margin: 15px 0;">Share your birthday wishes for Ray</p>
             </div>
-            <button class="btn btn-primary" id="submitStory" onclick="submitStory()" style="display:none;">Submit Story</button>
+            <button class="btn btn-primary" id="submitStoryBtn" onclick="submitStory()">Submit Message</button>
             <button class="btn back-button" onclick="closeVoiceModal()">Cancel</button>
         </div>
     </div>
@@ -948,6 +952,9 @@ const RAY_PHOTO = 'https://rays67birthday.complitrst.com/Ray-photo.png';
         let recordingSeconds = 0;
         let mediaRecorder = null;
         let audioChunks = [];
+        let isRecording = false;
+        let recordingStartTime = 0;
+        let timerInterval = null;
         let isRecording = false;
         let recordingStartTime = 0;
         let timerInterval = null;
@@ -1317,6 +1324,25 @@ photosSection +
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 stopRecording();
             }
+            
+            // Reset the UI
+            const recordBtn = document.getElementById('recordBtn');
+            const timer = document.getElementById('recordTimer');
+            const submitBtn = document.getElementById('submitStoryBtn');
+            
+            if (recordBtn) {
+                recordBtn.textContent = '🎤 Start Recording';
+                recordBtn.style.background = '#2ecc71';
+            }
+            if (timer) {
+                timer.textContent = '00:00';
+            }
+            if (submitBtn) {
+                submitBtn.style.display = 'none';
+            }
+            
+            // Clear the recorded audio
+            window.recordedAudioData = null;
         }
 
         async function toggleRecording() {
@@ -1344,16 +1370,13 @@ function stopRecording() {
         clearInterval(timerInterval);
 
         const recordBtn = document.getElementById('recordBtn');
-        const display = document.getElementById('recordTimer');
-
         if (recordBtn) {
             recordBtn.textContent = '🎤 Start Recording';
             recordBtn.style.background = '#2ecc71';
         }
-
-        if (display) {
-            display.textContent = '00:00';
-        }
+        
+        // Keep the timer display showing the final time
+        // Don't reset it here so user can see how long they recorded
     }
 }
 
@@ -1378,7 +1401,15 @@ function stopRecording() {
             const reader = new FileReader();
             reader.onloadend = () => {
                 window.recordedAudioData = reader.result.split(',')[1];
-                playAudio(window.recordedAudioData); // Preview (optional)
+                
+                // Show submit button after recording
+                const submitBtn = document.getElementById('submitStoryBtn');
+                if (submitBtn) {
+                    submitBtn.style.display = 'block';
+                }
+                
+                // Optional: Auto-play preview
+                // playAudio(window.recordedAudioData);
             };
             reader.readAsDataURL(audioBlob);
             stream.getTracks().forEach(track => track.stop());
