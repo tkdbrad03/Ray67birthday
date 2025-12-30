@@ -1,0 +1,24 @@
+{
+  "name": "Ray's 67th Birthday Celebration",
+  "short_name": "Ray's Birthday",
+  "description": "Collect birthday coins and memories for Ray's 67th birthday at Waterlefe Golf & River Club",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a3a5c",
+  "theme_color": "#1a3a5c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "Ray-favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "Ray-favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
