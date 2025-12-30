@@ -1179,191 +1179,46 @@ photosSection +
             URL.revokeObjectURL(url);
             
             alert('Memory book exported! Ray can open this file anytime to relive his special day.');
-        }>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ray's 67th Birthday Memories - January 4, 2026</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a3a5c 0%, #0f2138 100%);
-            min-height: 100vh;
-            padding: 20px;
         }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 3px solid #d4af37;
-            padding-bottom: 30px;
-        }
-        .header h1 {
-            color: #1a3a5c;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        .header .subtitle {
-            color: #666;
-            font-size: 1.2rem;
-        }
-        .goal-achieved {
-            background: linear-gradient(135deg, #fff9e6 0%, #ffe9a8 100%);
-            border: 3px solid #d4af37;
-            border-radius: 16px;
-            padding: 30px;
-            text-align: center;
-            margin: 30px 0;
-        }
-        .goal-achieved h2 {
-            color: #1a3a5c;
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        .goal-number {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #d4af37;
-        }
-        .section {
-            margin: 40px 0;
-        }
-        .section-title {
-            color: #1a3a5c;
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            border-left: 5px solid #d4af37;
-            padding-left: 15px;
-        }
-        .coin-list {
-            display: grid;
-            gap: 15px;
-        }
-        .coin-item {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 5px solid #ccc;
-        }
-        .coin-item.blue { border-left-color: #4A90E2; }
-        .coin-item.purple { border-left-color: #9B59B6; }
-        .coin-item.orange { border-left-color: #E67E22; }
-        .coin-item.gold { border-left-color: #d4af37; }
-        .coin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .coin-name {
-            font-weight: 600;
-            color: #1a3a5c;
-            font-size: 1.1rem;
-        }
-        .coin-player {
-            color: #666;
-            font-size: 0.9rem;
-        }
-        .coin-time {
-            color: #999;
-            font-size: 0.85rem;
-        }
-        .photo-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .photo-item {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .photo-item img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-        }
-        .photo-info {
-            padding: 15px;
-            background: #f8f9fa;
-        }
-        .photo-uploader {
-            font-weight: 600;
-            color: #1a3a5c;
-            margin-bottom: 5px;
-        }
-        .photo-time {
-            color: #999;
-            font-size: 0.85rem;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 2px solid #ddd;
-            color: #666;
-        }
-</html>`;
+
+
+        async function clearAllData() {
+            if (!currentUser || currentUser.toLowerCase() !== 'tmac') {
+                alert('Only TMac can clear all data');
+                return;
+            }
             
-            // Create download
-            const blob = new Blob([memoryHTML], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Rays-67th-Birthday-Memories.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            if (!confirm('Are you SURE you want to clear ALL data? This cannot be undone!')) {
+                return;
+            }
             
-            alert('Memory book exported! Ray can open this file anytime to relive his special day.');
+            if (!confirm('This will delete everything - all players, coins, and photos. Really clear everything?')) {
+                return;
+            }
+            
+            await initData();
+            await updateDashboard();
+            alert('All data has been cleared. Starting fresh!');
         }
-        
+
         async function initData() {
-            try {
-                const snapshot = await dataRef.once('value');
-                if (!snapshot.exists()) {
-                    // Initialize with empty data
-                    const initialData = {
-                        players: {},
-                        photos: []
-                    };
-                    await dataRef.set(initialData);
-                    console.log('Database initialized');
-                }
-            } catch (error) {
-                console.error('Error initializing data:', error);
+            const snapshot = await dataRef.once('value');
+            if (!snapshot.exists()) {
+                const initialData = {
+                    players: {},
+                    photos: []
+                };
+                await dataRef.set(initialData);
             }
         }
 
         async function getData() {
-            try {
-                const snapshot = await dataRef.once('value');
-                return snapshot.val() || { players: {}, photos: [] };
-            } catch (error) {
-                console.error('Error getting data:', error);
-                return { players: {}, photos: [] };
-            }
+            const snapshot = await dataRef.once('value');
+            return snapshot.val() || { players: {}, photos: [] };
         }
 
         async function saveData(data) {
-            try {
-                await dataRef.set(data);
-                console.log('Data saved successfully');
-            } catch (error) {
-                console.error('Error saving data:', error);
-                alert('Error saving data. Please try again.');
-            }
+            await dataRef.set(data);
         }
 
         function showScreen(screenId) {
@@ -1372,294 +1227,252 @@ photosSection +
         }
 
         async function login() {
-            const nameInput = document.getElementById('playerName');
-            const name = nameInput.value.trim();
-            
+            const name = document.getElementById('playerName').value.trim();
             if (!name) {
                 alert('Please enter your name');
                 return;
             }
-
+            
             currentUser = name;
+            document.getElementById('dashboardName').textContent = name;
             
-            // Check if admin
+            // Show admin button if TMac
             if (name.toLowerCase() === 'tmac') {
-                isAdmin = true;
+                document.getElementById('adminControls').style.display = 'block';
             }
             
-            const data = await getData();
-            
-            if (!data.players[name]) {
-                data.players[name] = {
-                    name: name,
-                    coins: []
-                };
-                
-                if (name.toLowerCase() === 'ray') {
-                    data.players[name].coins.push({
-                        type: 'birthday',
-                        timestamp: Date.now(),
-                        isRay: true
-                    });
-                }
-                
-                await saveData(data);
-            }
-
-            updateDashboard();
+            await updateDashboard();
             showScreen('dashboardScreen');
         }
 
         async function updateDashboard() {
             const data = await getData();
-            const player = data.players[currentUser];
+            const players = data.players || {};
             
-            document.getElementById('dashboardName').textContent = player.name;
-
-            // Show admin section if admin
-            if (isAdmin) {
-                document.getElementById('adminSection').style.display = 'block';
-            }
-
-            // Calculate total coins across all players with values
+            // Count coins
             let totalCoins = 0;
-            Object.values(data.players).forEach(p => {
-                p.coins.forEach(coin => {
-                    const coinType = coinTypes[coin.type];
-                    totalCoins += coinType ? coinType.value : 1;
-                });
+            Object.values(players).forEach(player => {
+                totalCoins += player.coins.length;
             });
-
-            document.getElementById('totalCoins').textContent = totalCoins;
             
-            const percentage = Math.min(Math.round((totalCoins / COIN_GOAL) * 100), 100);
-            document.getElementById('progressBar').style.width = percentage + '%';
-            document.getElementById('progressPercent').textContent = percentage + '% there!';
-
-            // Set preview images for all coins
-            document.getElementById('birdiePreview').src = RAY_PHOTO;
-            document.getElementById('eaglePreview').src = RAY_PHOTO;
-            document.getElementById('hotStreakPreview').src = RAY_PHOTO;
-            document.getElementById('wishesPreview').src = RAY_PHOTO;
+            // Update display
+            document.getElementById('totalCoins').textContent = totalCoins;
+            document.getElementById('goalProgress').style.width = Math.min((totalCoins / 67) * 100, 100) + '%';
+            document.getElementById('goalPercentage').textContent = Math.round((totalCoins / 67) * 100) + '%';
+            
+            // Update user's coins
+            const userCoins = players[currentUser]?.coins || [];
+            const coinsGrid = document.getElementById('coinsGrid');
+            
+            if (userCoins.length === 0) {
+                coinsGrid.innerHTML = '<div class="empty-state">Start collecting coins!</div>';
+            } else {
+                coinsGrid.innerHTML = userCoins.map(coin => {
+                    const coinType = COIN_TYPES[coin.type];
+                    return `
+                        <div class="coin ${coinType.accent} ${currentUser.toLowerCase() === 'ray' ? 'ray-special' : ''}" data-type="${coin.type}">
+                            <img src="${RAY_PHOTO}" alt="coin">
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
         function showClaimModal() {
-            document.getElementById('claimModal').classList.add('active');
+            document.getElementById('claimModal').style.display = 'flex';
         }
 
         function closeModal() {
-            document.getElementById('claimModal').classList.remove('active');
+            document.getElementById('claimModal').style.display = 'none';
         }
 
         async function claimCoin(type) {
             const data = await getData();
-            const player = data.players[currentUser];
-            const isRay = currentUser.toLowerCase() === 'ray';
+            const players = data.players || {};
             
-            player.coins.push({
+            if (!players[currentUser]) {
+                players[currentUser] = { coins: [] };
+            }
+            
+            players[currentUser].coins.push({
                 type: type,
-                timestamp: Date.now(),
-                isRay: isRay
+                timestamp: Date.now()
             });
             
             await saveData(data);
+            await updateDashboard();
             closeModal();
-            updateDashboard();
         }
 
         function showVoiceRecorder() {
-            closeModal();
-            document.getElementById('voiceModal').classList.add('active');
-            recordingSeconds = 0;
-            updateTimer();
+            document.getElementById('voiceModal').style.display = 'flex';
         }
 
         function closeVoiceModal() {
-            if (recording) {
+            document.getElementById('voiceModal').style.display = 'none';
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
                 stopRecording();
             }
-            document.getElementById('voiceModal').classList.remove('active');
         }
 
         async function toggleRecording() {
-            if (!recording) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-
-                    mediaRecorder.ondataavailable = (event) => {
-                        audioChunks.push(event.data);
-                    };
-
-                    mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                            // Store the base64 audio data
-                            window.recordedAudioData = reader.result;
-                            document.getElementById('submitStory').style.display = 'block';
-                        };
-                        reader.readAsDataURL(audioBlob);
-                    };
-
-                    mediaRecorder.start();
-                    startRecording();
-                } catch (err) {
-                    alert('Microphone access required for voice recording');
-                }
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                await startRecording();
             } else {
                 stopRecording();
             }
         }
 
-        function startRecording() {
-            recording = true;
-            document.getElementById('recordButton').classList.add('recording');
-            recordingInterval = setInterval(() => {
-                recordingSeconds++;
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        window.recordedAudioData = reader.result.split(',')[1];
+                    };
+                    reader.readAsDataURL(audioBlob);
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                recordingStartTime = Date.now();
+                document.getElementById('recordBtn').textContent = '⏹ Stop Recording';
+                document.getElementById('recordBtn').style.background = '#e74c3c';
                 updateTimer();
-                if (recordingSeconds >= 60) {
-                    stopRecording();
-                }
-            }, 1000);
+                timerInterval = setInterval(updateTimer, 100);
+            } catch (error) {
+                alert('Could not access microphone: ' + error.message);
+            }
         }
 
         function stopRecording() {
-            recording = false;
-            document.getElementById('recordButton').classList.remove('recording');
-            clearInterval(recordingInterval);
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                clearInterval(timerInterval);
+                document.getElementById('recordBtn').textContent = '🎤 Start Recording';
+                document.getElementById('recordBtn').style.background = '#2ecc71';
+                document.getElementById('timer').textContent = '0:00';
             }
         }
 
         function updateTimer() {
-            const minutes = Math.floor(recordingSeconds / 60);
-            const seconds = recordingSeconds % 60;
-            document.getElementById('recordTimer').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            if (isRecording) {
+                const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
         }
 
         async function submitStory() {
-            const data = getData();
-            const player = data.players[currentUser];
-            const isRay = currentUser.toLowerCase() === 'ray';
+            const audioData = window.recordedAudioData;
             
-            player.coins.push({
-                type: 'story',
-                timestamp: Date.now(),
-                audio: window.recordedAudioData || null,
-                playerName: currentUser,
-                isRay: isRay
-            });
-            
-            await saveData(data);
-            
-            // Clean up
-            window.recordedAudioData = null;
-            document.getElementById('submitStory').style.display = 'none';
-            recordingSeconds = 0;
-            
-            closeVoiceModal();
-            updateDashboard();
-            
-            alert('Birthday message saved!');
-        }
-
-
-        function playAudio(audioData) {
             if (!audioData) {
-                alert('No audio available');
+                alert('Please record a birthday message first!');
                 return;
             }
             
-            const audio = new Audio(audioData);
-            audio.play().catch(err => {
-                console.error('Error playing audio:', err);
-                alert('Error playing audio');
+            const data = await getData();
+            const players = data.players || {};
+            
+            if (!players[currentUser]) {
+                players[currentUser] = { coins: [] };
+            }
+            
+            players[currentUser].coins.push({
+                type: 'birthday',
+                timestamp: Date.now(),
+                audio: audioData
             });
+            
+            await saveData(data);
+            await updateDashboard();
+            closeVoiceModal();
+            
+            window.recordedAudioData = null;
+            alert('Birthday message saved! Worth 2 coins!');
         }
-        
+
+        function playAudio(audioData) {
+            const audio = new Audio('data:audio/webm;base64,' + audioData);
+            audio.play();
+        }
+
         async function showLeaderboard() {
-            const data = getData();
-            const players = Object.values(data.players);
+            const data = await getData();
+            const players = data.players || {};
             
-            players.sort((a, b) => a.name.localeCompare(b.name));
+            const leaderboard = Object.entries(players).map(([name, player]) => ({
+                name,
+                count: player.coins.length,
+                value: player.coins.reduce((sum, coin) => sum + COIN_TYPES[coin.type].value, 0)
+            })).sort((a, b) => b.value - a.value);
             
-            const list = document.getElementById('leaderboardList');
-            list.innerHTML = '';
-            
-            players.forEach((player) => {
-                const item = document.createElement('div');
-                item.className = `leaderboard-item ${player.name.toLowerCase() === 'ray' ? 'ray-highlight' : ''}`;
-                
-                const coinIcons = player.coins.map(coin => {
-                    const accent = coinTypes[coin.type].accent;
-                    return `<span class="mini-coin ${accent}"><img src="${RAY_PHOTO}" alt="coin"></span>`;
-                }).join(' ');
-                
-                item.innerHTML = `
-                    <div class="player-info">
-                        <div class="player-name">${player.name}</div>
-                        <div class="player-coins">${coinIcons}</div>
+            const html = leaderboard.map((player, index) => `
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">${index + 1}</div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${player.name}</div>
+                        <div class="leaderboard-stats">${player.count} coins • ${player.value} points</div>
                     </div>
-                    <div class="coin-count-display">${player.coins.length}</div>
-                `;
-
-                list.appendChild(item);
-            });
-
+                </div>
+            `).join('');
+            
+            document.getElementById('leaderboardList').innerHTML = html || '<p style="text-align: center; color: #999;">No coins collected yet</p>';
             showScreen('leaderboardScreen');
         }
 
         function showGallery() {
-            filterGallery('all');
             showScreen('galleryScreen');
+            filterGallery('all');
         }
 
         async function filterGallery(filter) {
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            if (event && event.target) {
-                event.target.classList.add('active');
-            } else {
-                document.querySelector('.filter-btn').classList.add('active');
-            }
-
-            const data = getData();
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(filter) || (filter === 'all' && btn.textContent === 'All'));
+            });
+            
+            const data = await getData();
+            const players = data.players || {};
             const grid = document.getElementById('galleryGrid');
+            
             grid.innerHTML = '';
-
-            const allCoins = [];
-            Object.values(data.players).forEach(player => {
+            
+            Object.entries(players).forEach(([playerName, player]) => {
                 player.coins.forEach(coin => {
+                    const coinType = COIN_TYPES[coin.type];
+                    
                     if (filter === 'all' || coin.type === filter) {
-                        allCoins.push({ ...coin, playerName: player.name });
+                        const item = document.createElement('div');
+                        item.className = 'gallery-item';
+                        item.innerHTML = `
+                            <div class="coin ${coinType.accent} ${playerName.toLowerCase() === 'ray' ? 'ray-special' : ''}" style="width: 80px; height: 80px; margin: 0 auto 10px;">
+                                <img src="${RAY_PHOTO}" alt="coin">
+                            </div>
+                            <div style="font-weight: 600; color: #1a3a5c;">${playerName}</div>
+                            <div style="font-size: 0.9rem; color: #666;">${coinType.name}</div>
+                            <div style="font-size: 0.8rem; color: #999;">${new Date(coin.timestamp).toLocaleString()}</div>
+                            ${coin.audio ? `<button class="btn" style="margin-top: 10px; padding: 5px 15px; font-size: 0.85rem;" onclick="playAudio('${coin.audio}')">▶ Play Message</button>` : ''}
+                        `;
+                        grid.appendChild(item);
                     }
                 });
             });
-
-            allCoins.sort((a, b) => b.timestamp - a.timestamp);
-
-            if (allCoins.length === 0) {
-                grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><div class="empty-state-icon"></div><p>No coins yet!</p></div>';
-            } else {
-                allCoins.forEach(coin => {
-                    const coinType = coinTypes[coin.type];
-                    const item = document.createElement('div');
-                    item.className = 'gallery-item';
-                    item.innerHTML = `
-                        <div class="coin ${coinType.accent} ${coin.playerName.toLowerCase() === 'ray' ? 'ray-special' : ''}" style="width: 80px; height: 80px; margin: 0 auto 10px;">
-                            <img src="${RAY_PHOTO}" alt="coin">
-                            
-                        </div>
-                        <div style="font-weight: 600; color: #1a3a5c;">${coin.playerName}</div>
-                        <div style="font-size: 0.9rem; color: #666;">${coinType.name}</div>
-                        <div style="font-size: 0.8rem; color: #999;">${new Date(coin.timestamp).toLocaleString()}</div>
-                    `;
-                    grid.appendChild(item);
-                });
+            
+            if (grid.children.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px;">No coins in this category yet</p>';
             }
         }
 
