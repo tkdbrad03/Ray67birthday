@@ -982,6 +982,9 @@ const RAY_PHOTO = 'https://rays67birthday.complitrst.com/Ray-photo.png';
                             <button class="photo-delete" onclick="removePhoto(${photoId})">×</button>
                         `;
                         grid.appendChild(previewItem);
+                        
+                        // Show save button after photo is loaded
+                        showSavePhotosButton();
                     };
                     reader.readAsDataURL(file);
                 }
@@ -989,9 +992,10 @@ const RAY_PHOTO = 'https://rays67birthday.complitrst.com/Ray-photo.png';
             
             // Reset input
             event.target.value = '';
-            
-            // Show save button if not already visible
-            if (pendingPhotos.length > 0 && !document.getElementById('savePhotosBtn')) {
+        }
+        
+        function showSavePhotosButton() {
+            if (!document.getElementById('savePhotosBtn')) {
                 const saveBtn = document.createElement('button');
                 saveBtn.id = 'savePhotosBtn';
                 saveBtn.className = 'btn btn-primary';
@@ -1504,6 +1508,7 @@ function stopRecording() {
             
             const data = await getData();
             const players = data.players || {};
+            const photos = data.photos || [];
             const grid = document.getElementById('galleryGrid');
             
             grid.innerHTML = '';
@@ -1512,35 +1517,54 @@ function stopRecording() {
             const isCoinFilter = filter === 'coins';
             const isPhotoFilter = filter === 'photos';
             
-            Object.entries(players).forEach(([playerName, player]) => {
-                player.coins.forEach(coin => {
-                    const coinType = COIN_TYPES[coin.type];
-                    
-                    // Show if: all, OR matching coin type, OR 'coins' filter showing all coins
-                    const shouldShow = filter === 'all' || 
-                                      coin.type === filter || 
-                                      (isCoinFilter && !coin.photo) ||
-                                      (isPhotoFilter && coin.photo);
-                    
-                    if (shouldShow) {
-                        const item = document.createElement('div');
-                        item.className = 'gallery-item';
-                        item.innerHTML = `
-                            <div class="coin ${coinType.accent} ${playerName.toLowerCase() === 'ray' ? 'ray-special' : ''}" style="width: 80px; height: 80px; margin: 0 auto 10px;">
-                                <img src="${RAY_PHOTO}" alt="coin">
-                            </div>
-                            <div style="font-weight: 600; color: #1a3a5c;">${playerName}</div>
-                            <div style="font-size: 0.9rem; color: #666;">${coinType.name}</div>
-                            <div style="font-size: 0.8rem; color: #999;">${new Date(coin.timestamp).toLocaleString()}</div>
-                            ${coin.audio ? `<button class="btn" style="margin-top: 10px; padding: 5px 15px; font-size: 0.85rem;" onclick="playAudio('${coin.audio}')">▶ Play Message</button>` : ''}
-                        `;
-                        grid.appendChild(item);
-                    }
+            // Display coins
+            if (filter === 'all' || filter === 'coins' || ['birdie', 'eagle', 'hotStreak', 'story'].includes(filter)) {
+                Object.entries(players).forEach(([playerName, player]) => {
+                    player.coins.forEach(coin => {
+                        const coinType = COIN_TYPES[coin.type];
+                        
+                        // Show if: all, OR matching coin type, OR 'coins' filter showing all coins
+                        const shouldShow = filter === 'all' || 
+                                          coin.type === filter || 
+                                          isCoinFilter;
+                        
+                        if (shouldShow) {
+                            const item = document.createElement('div');
+                            item.className = 'gallery-item';
+                            item.innerHTML = `
+                                <div class="coin ${coinType.accent} ${playerName.toLowerCase() === 'ray' ? 'ray-special' : ''}" style="width: 80px; height: 80px; margin: 0 auto 10px;">
+                                    <img src="${RAY_PHOTO}" alt="coin">
+                                </div>
+                                <div style="font-weight: 600; color: #1a3a5c;">${playerName}</div>
+                                <div style="font-size: 0.9rem; color: #666;">${coinType.name}</div>
+                                <div style="font-size: 0.8rem; color: #999;">${new Date(coin.timestamp).toLocaleString()}</div>
+                                ${coin.audio ? `<button class="btn" style="margin-top: 10px; padding: 5px 15px; font-size: 0.85rem;" onclick="playAudio('${coin.audio}')">▶ Play Message</button>` : ''}
+                            `;
+                            grid.appendChild(item);
+                        }
+                    });
                 });
-            });
+            }
+            
+            // Display photos
+            if (filter === 'all' || isPhotoFilter) {
+                photos.forEach(photo => {
+                    const item = document.createElement('div');
+                    item.className = 'gallery-item photo-gallery-item';
+                    item.innerHTML = `
+                        <img src="${photo.data}" class="photo-gallery-image" alt="Photo">
+                        <div class="photo-gallery-info">
+                            ${photo.caption ? `<div class="photo-gallery-caption">${photo.caption}</div>` : ''}
+                            <div class="photo-gallery-uploader">By ${photo.uploader}</div>
+                            <div style="font-size: 0.8rem; color: #999;">${new Date(photo.timestamp).toLocaleString()}</div>
+                        </div>
+                    `;
+                    grid.appendChild(item);
+                });
+            }
             
             if (grid.children.length === 0) {
-                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px;">No coins in this category yet</p>';
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 40px;">No items in this category yet</p>';
             }
         }
 
