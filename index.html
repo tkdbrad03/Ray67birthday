@@ -1345,7 +1345,7 @@ function stopRecording() {
         clearInterval(timerInterval);
 
         const recordBtn = document.getElementById('recordBtn');
-        const display = document.getElementById('recordTimer';
+        const display = document.getElementById('recordTimer');
 
         if (recordBtn) {
             recordBtn.textContent = '🎤 Start Recording';
@@ -1353,7 +1353,7 @@ function stopRecording() {
         }
 
         if (display) {
-            display.textContent = '0.0s';
+            display.textContent = '00:00';
         }
     }
 }
