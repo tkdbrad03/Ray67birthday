@@ -1235,13 +1235,19 @@ photosSection +
             });
             
             // Update display
-            document.getElementById('totalCoins').textContent = totalCoins;
-            document.getElementById('goalProgress').style.width = Math.min((totalCoins / 67) * 100, 100) + '%';
-            document.getElementById('goalPercentage').textContent = Math.round((totalCoins / 67) * 100) + '%';
+            const totalCoinsEl = document.getElementById('totalCoins');
+            const goalProgressEl = document.getElementById('goalProgress');
+            const goalPercentageEl = document.getElementById('goalPercentage');
+            
+            if (totalCoinsEl) totalCoinsEl.textContent = totalCoins;
+            if (goalProgressEl) goalProgressEl.style.width = Math.min((totalCoins / 67) * 100, 100) + '%';
+            if (goalPercentageEl) goalPercentageEl.textContent = Math.round((totalCoins / 67) * 100) + '%';
             
             // Update user's coins
             const userCoins = players[currentUser]?.coins || [];
             const coinsGrid = document.getElementById('coinsGrid');
+            
+            if (!coinsGrid) return;
             
             if (userCoins.length === 0) {
                 coinsGrid.innerHTML = '<div class="empty-state">Start collecting coins!</div>';
