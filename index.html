@@ -1460,11 +1460,21 @@ photosSection +
             
             grid.innerHTML = '';
             
+            // Handle 'coins' filter - show all coin types
+            const isCoinFilter = filter === 'coins';
+            const isPhotoFilter = filter === 'photos';
+            
             Object.entries(players).forEach(([playerName, player]) => {
                 player.coins.forEach(coin => {
                     const coinType = COIN_TYPES[coin.type];
                     
-                    if (filter === 'all' || coin.type === filter) {
+                    // Show if: all, OR matching coin type, OR 'coins' filter showing all coins
+                    const shouldShow = filter === 'all' || 
+                                      coin.type === filter || 
+                                      (isCoinFilter && !coin.photo) ||
+                                      (isPhotoFilter && coin.photo);
+                    
+                    if (shouldShow) {
                         const item = document.createElement('div');
                         item.className = 'gallery-item';
                         item.innerHTML = `
