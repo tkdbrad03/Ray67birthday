@@ -151,8 +151,8 @@
             100% { transform: scale(1) rotate(360deg); }
         }
         .coin img {
-            width: 82%;
-            height: 82%;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
             object-fit: cover;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -738,69 +738,70 @@
                 <div class="goal-message">Let's collect 67 coins for Ray today! </div>
             </div>
             
-            <div class="coin-collection-section">
-                <div class="section-title">Collect Your Coins</div>
-                
-                <div class="coin-card" onclick="claimCoin('birdie')">
-                    <div class="coin-card-visual">
-                        <div class="coin blue">
-                            <img src="" id="birdiePreview" alt="coin">
-                        </div>
-                    </div>
-                    <div class="coin-card-info">
-                        <div class="coin-card-name">Birdie Coin</div>
-                        <div class="coin-card-desc">One under par <span class="coin-value-badge">1 COIN</span></div>
-                    </div>
-                    <div class="coin-card-action">
-                        <button class="btn-claim">Claim</button>
-                    </div>
-                </div>
+           <div class="coin-collection-section">
+    <div class="section-title">Collect Your Coins</div>
 
-                <div class="coin-card" onclick="claimCoin('eagle')">
-                    <div class="coin-card-visual">
-                        <div class="coin purple">
-                            <img src="" id="eaglePreview" alt="coin">
-                        </div>
-                    </div>
-                    <div class="coin-card-info">
-                        <div class="coin-card-name">Eagle Coin</div>
-                        <div class="coin-card-desc">Two under par <span class="coin-value-badge">1 COIN</span></div>
-                    </div>
-                    <div class="coin-card-action">
-                        <button class="btn-claim">Claim</button>
-                    </div>
-                </div>
-
-                <div class="coin-card" onclick="claimCoin('hotStreak')">
-                    <div class="coin-card-visual">
-                        <div class="coin orange">
-                            <img src="" id="hotStreakPreview" alt="coin">
-                        </div>
-                    </div>
-                    <div class="coin-card-info">
-                        <div class="coin-card-name">Hot Streak Coin</div>
-                        <div class="coin-card-desc">Three pars in a row <span class="coin-value-badge">1 COIN</span></div>
-                    </div>
-                    <div class="coin-card-action">
-                        <button class="btn-claim">Claim</button>
-                    </div>
-                </div>
-
-                <div class="coin-card" onclick="showVoiceRecorder()">
-                    <div class="coin-card-visual">
-                        <div class="coin gold">
-                            <img src="" id="wishesPreview" alt="coin">
-                        </div>
-                    </div>
-                    <div class="coin-card-info">
-                        <div class="coin-card-name">Birthday Wishes</div>
-                        <div class="coin-card-desc">Send birthday message <span class="coin-value-badge">2 COINS</span></div>
-                    </div>
-                    <div class="coin-card-action">
-                        <button class="btn-claim record">Record</button>
-                    </div>
-                </div>
+    <div class="coin-card" onclick="claimCoin('birdie')">
+        <div class="coin-card-visual">
+            <div class="coin blue">
+                <img src="Ray-photo.png" id="birdiePreview" alt="Ray Coin">
             </div>
+        </div>
+        <div class="coin-card-info">
+            <div class="coin-card-name">Birdie Coin</div>
+            <div class="coin-card-desc">One under par <span class="coin-value-badge">1 COIN</span></div>
+        </div>
+        <div class="coin-card-action">
+            <button class="btn-claim">Claim</button>
+        </div>
+    </div>
+
+    <div class="coin-card" onclick="claimCoin('eagle')">
+        <div class="coin-card-visual">
+            <div class="coin purple">
+                <img src="Ray-photo.png" id="eaglePreview" alt="Ray Coin">
+            </div>
+        </div>
+        <div class="coin-card-info">
+            <div class="coin-card-name">Eagle Coin</div>
+            <div class="coin-card-desc">Two under par <span class="coin-value-badge">1 COIN</span></div>
+        </div>
+        <div class="coin-card-action">
+            <button class="btn-claim">Claim</button>
+        </div>
+    </div>
+
+    <div class="coin-card" onclick="claimCoin('hotStreak')">
+        <div class="coin-card-visual">
+            <div class="coin orange">
+                <img src="Ray-photo.png" id="hotStreakPreview" alt="Ray Coin">
+            </div>
+        </div>
+        <div class="coin-card-info">
+            <div class="coin-card-name">Hot Streak Coin</div>
+            <div class="coin-card-desc">Three pars in a row <span class="coin-value-badge">1 COIN</span></div>
+        </div>
+        <div class="coin-card-action">
+            <button class="btn-claim">Claim</button>
+        </div>
+    </div>
+
+    <div class="coin-card" onclick="showVoiceRecorder()">
+        <div class="coin-card-visual">
+            <div class="coin gold">
+                <img src="Ray-photo.png" id="wishesPreview" alt="Ray Coin">
+            </div>
+        </div>
+        <div class="coin-card-info">
+            <div class="coin-card-name">Birthday Wishes</div>
+            <div class="coin-card-desc">Send birthday message <span class="coin-value-badge">2 COINS</span></div>
+        </div>
+        <div class="coin-card-action">
+            <button class="btn-claim record">Record</button>
+        </div>
+    </div>
+</div>
+
 
             <div class="photo-upload-section">
                 <div class="photo-upload-title">Add Photos from Today</div>
@@ -1333,6 +1334,25 @@ function updateTimer() {
     const display = document.getElementById('timerDisplay');
     if (display) {
         display.textContent = `${seconds}.${milliseconds}s`;
+    }
+}
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        isRecording = false;
+        clearInterval(timerInterval);
+
+        const recordBtn = document.getElementById('recordBtn');
+        const display = document.getElementById('timerDisplay');
+
+        if (recordBtn) {
+            recordBtn.textContent = '🎤 Start Recording';
+            recordBtn.style.background = '#2ecc71';
+        }
+
+        if (display) {
+            display.textContent = '0.0s';
+        }
     }
 }
 
