@@ -947,6 +947,10 @@
         let recordingSeconds = 0;
         let mediaRecorder = null;
         let audioChunks = [];
+        let isRecording = false;
+        let recordingStartTime = 0;
+        let timerInterval = null;
+        let currentFilter = 'all';
 
         // Photo handling
         let pendingPhotos = [];
