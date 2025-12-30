@@ -932,6 +932,14 @@
         
         const COIN_GOAL = 67;
 
+        const COIN_TYPES = {
+            birdie: { name: 'Birdie Coin', accent: 'blue', value: 1 },
+            eagle: { name: 'Eagle Coin', accent: 'purple', value: 1 },
+            hotStreak: { name: 'Hot Streak Coin', accent: 'orange', value: 1 },
+            birthday: { name: 'Birthday Wishes', accent: 'gold', value: 2 },
+            ray: { name: 'Birthday Legend', accent: 'gold', value: 1 }
+        };
+
         let currentUser = null;
         let isAdmin = false;
         let recording = false;
@@ -1331,8 +1339,11 @@ photosSection +
                 mediaRecorder.start();
                 isRecording = true;
                 recordingStartTime = Date.now();
-                document.getElementById('recordBtn').textContent = '⏹ Stop Recording';
-                document.getElementById('recordBtn').style.background = '#e74c3c';
+                const recordBtn = document.getElementById('recordBtn');
+                if (recordBtn) {
+                    recordBtn.textContent = '⏹ Stop Recording';
+                    recordBtn.style.background = '#e74c3c';
+                }
                 updateTimer();
                 timerInterval = setInterval(updateTimer, 100);
             } catch (error) {
@@ -1345,9 +1356,13 @@ photosSection +
                 mediaRecorder.stop();
                 isRecording = false;
                 clearInterval(timerInterval);
-                document.getElementById('recordBtn').textContent = '🎤 Start Recording';
-                document.getElementById('recordBtn').style.background = '#2ecc71';
-                document.getElementById('timer').textContent = '0:00';
+                const recordBtn = document.getElementById('recordBtn');
+                const timer = document.getElementById('timer');
+                if (recordBtn) {
+                    recordBtn.textContent = '🎤 Start Recording';
+                    recordBtn.style.background = '#2ecc71';
+                }
+                if (timer) timer.textContent = '0:00';
             }
         }
 
