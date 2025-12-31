@@ -1,5 +1,3 @@
-athe audio messages saves, but it doesn't play back on mobile device
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1071,6 +1069,9 @@ const RAY_PHOTO = 'https://rays67birthday.complitrst.com/Ray-photo.png';
         async function exportMemoryBook() {
             const data = await getData();
             
+            console.log('Exporting memory book with data:', data);
+            console.log('Players:', Object.keys(data.players || {}));
+            
             // Calculate total coins
             let totalCoins = 0;
             Object.values(data.players).forEach(p => {
@@ -1082,16 +1083,19 @@ const RAY_PHOTO = 'https://rays67birthday.complitrst.com/Ray-photo.png';
             
             // Collect all coins with player info
             const allCoins = [];
-            Object.values(data.players).forEach(player => {
+            Object.entries(data.players).forEach(([playerName, player]) => {
                 player.coins.forEach(coin => {
                     allCoins.push({
                         ...coin,
-                        playerName: player.name,
+                        playerName: playerName,
                         coinType: coinTypes[coin.type]
                     });
                 });
             });
             allCoins.sort((a, b) => a.timestamp - b.timestamp);
+            
+            console.log('Total coins to export:', allCoins.length);
+            console.log('Coins with audio:', allCoins.filter(c => c.audio).length);
             
             // Collect all photos
             const photos = data.photos || [];
@@ -1099,13 +1103,30 @@ const RAY_PHOTO = 'https://rays67birthday.complitrst.com/Ray-photo.png';
             // Build HTML sections
             let coinsHTML = '';
             allCoins.forEach(coin => {
+                const hasAudio = coin.audio && coin.audio.length > 0;
+                const mimeType = coin.mimeType || 'audio/webm';
+                
+                if (hasAudio) {
+                    console.log(`Coin has audio - Player: ${coin.playerName}, Type: ${coin.coinType.name}, Audio length: ${coin.audio.length}, MimeType: ${mimeType}`);
+                }
+                
                 coinsHTML += '<div class="coin-item ' + coin.coinType.accent + '">' +
                     '<div class="coin-header">' +
                     '<span class="coin-name">' + coin.coinType.name + '</span>' +
                     '<span class="coin-player">by ' + coin.playerName + '</span>' +
                     '</div>' +
-                    '<div class="coin-time">' + new Date(coin.timestamp).toLocaleString() + '</div>' +
-                    '</div>';
+                    '<div class="coin-time">' + new Date(coin.timestamp).toLocaleString() + '</div>';
+                
+                // Add audio player if this coin has audio
+                if (hasAudio) {
+                    coinsHTML += '<div class="audio-player" style="margin-top:10px">' +
+                        '<audio controls preload="metadata" style="width:100%;max-width:400px">' +
+                        '<source src="data:' + mimeType + ';base64,' + coin.audio + '" type="' + mimeType + '">' +
+                        'Your browser does not support audio playback.' +
+                        '</audio></div>';
+                }
+                
+                coinsHTML += '</div>';
             });
             
             let photosSection = '';
@@ -1149,6 +1170,8 @@ const RAY_PHOTO = 'https://rays67birthday.complitrst.com/Ray-photo.png';
 '.coin-name{font-weight:600;color:#1a3a5c;font-size:1.1rem}' +
 '.coin-player{color:#666;font-size:0.9rem}' +
 '.coin-time{color:#999;font-size:0.85rem}' +
+'.audio-player{margin-top:10px}' +
+'.audio-player audio{border-radius:8px;outline:none}' +
 '.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;margin-top:20px}' +
 '.photo-item{border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1)}' +
 '.photo-item img{width:100%;height:250px;object-fit:cover}' +
@@ -1392,18 +1415,59 @@ function stopRecording() {
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
+        
+        // Try to use the most compatible format
+        let options = { mimeType: 'audio/webm' };
+        
+        // Check if browser supports different formats and use the best one
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            options = { mimeType: 'audio/mp4' };
+        } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            options = { mimeType: 'audio/webm;codecs=opus' };
+        } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+            options = { mimeType: 'audio/ogg;codecs=opus' };
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+            options = { mimeType: 'audio/webm' };
+        }
+        
+        console.log('Using audio format:', options.mimeType);
+        
+        mediaRecorder = new MediaRecorder(stream, options);
         audioChunks = [];
 
         mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
+            if (event.data && event.data.size > 0) {
+                audioChunks.push(event.data);
+                console.log('Audio chunk captured:', event.data.size, 'bytes');
+            }
         };
 
         mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const mimeType = mediaRecorder.mimeType;
+            
+            if (audioChunks.length === 0) {
+                console.error('No audio data captured!');
+                alert('Recording failed - no audio data captured. Please try again.');
+                return;
+            }
+            
+            const audioBlob = new Blob(audioChunks, { type: mimeType });
+            console.log('Audio blob created:', audioBlob.size, 'bytes, type:', mimeType);
+            
+            if (audioBlob.size === 0) {
+                console.error('Audio blob is empty!');
+                alert('Recording failed - audio file is empty. Please try a longer recording.');
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onloadend = () => {
-                window.recordedAudioData = reader.result.split(',')[1];
+                // Store both the base64 data and the mime type
+                const base64Data = reader.result.split(',')[1];
+                window.recordedAudioData = base64Data;
+                window.recordedAudioMimeType = mimeType;
+                
+                console.log('Audio encoded, size:', base64Data.length, 'characters');
                 
                 // Show submit button after recording
                 const submitBtn = document.getElementById('submitStoryBtn');
@@ -1411,14 +1475,14 @@ function stopRecording() {
                     submitBtn.style.display = 'block';
                 }
                 
-                // Optional: Auto-play preview
-                // playAudio(window.recordedAudioData);
+                console.log('Recording complete. Format:', mimeType, 'Size:', audioBlob.size, 'bytes');
             };
             reader.readAsDataURL(audioBlob);
             stream.getTracks().forEach(track => track.stop());
         };
 
-        mediaRecorder.start();
+        // Start recording with 100ms timeslice to ensure data is captured even for short recordings
+        mediaRecorder.start(100);
         isRecording = true;
         recordingStartTime = Date.now();
 
@@ -1439,6 +1503,7 @@ function stopRecording() {
 
         async function submitStory() {
             const audioData = window.recordedAudioData;
+            const mimeType = window.recordedAudioMimeType || 'audio/webm';
             
             if (!audioData) {
                 alert('Please record a birthday message first!');
@@ -1455,23 +1520,71 @@ function stopRecording() {
             players[currentUser].coins.push({
                 type: 'birthday',
                 timestamp: Date.now(),
-                audio: audioData
+                audio: audioData,
+                mimeType: mimeType
             });
             
-            data.players = players;  // THIS WAS MISSING!
+            data.players = players;
             await saveData(data);
             await updateDashboard();
             closeVoiceModal();
             
             window.recordedAudioData = null;
+            window.recordedAudioMimeType = null;
             alert('Birthday message saved! Worth 2 coins!');
         }
 
-       function playAudio(audioData) {
-    const audio = new Audio('data:audio/webm;base64,' + audioData);
-    audio.play().catch(error => {
-        console.error("Audio playback failed:", error);
-    });
+       function playAudio(audioData, mimeType) {
+    try {
+        // Default to webm if no mimeType provided (for backward compatibility)
+        const audioMimeType = mimeType || 'audio/webm';
+        
+        // Create audio element
+        const audio = new Audio('data:' + audioMimeType + ';base64,' + audioData);
+        
+        // Add event listeners for better debugging and UX
+        audio.addEventListener('loadstart', () => {
+            console.log('Audio loading started');
+        });
+        
+        audio.addEventListener('canplay', () => {
+            console.log('Audio can play');
+        });
+        
+        audio.addEventListener('error', (e) => {
+            console.error('Audio error:', e);
+            alert('Unable to play audio. This device may not support the audio format. Try on a different browser or device.');
+        });
+        
+        audio.addEventListener('ended', () => {
+            console.log('Audio playback ended');
+        });
+        
+        // Attempt to play
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    console.log('Audio playback started successfully');
+                })
+                .catch(error => {
+                    console.error("Audio playback failed:", error);
+                    
+                    // More user-friendly error message
+                    if (error.name === 'NotAllowedError') {
+                        alert('Please tap the play button again. Your browser requires user interaction to play audio.');
+                    } else if (error.name === 'NotSupportedError') {
+                        alert('Your device does not support this audio format. Try using Chrome or Firefox.');
+                    } else {
+                        alert('Unable to play audio: ' + error.message);
+                    }
+                });
+        }
+    } catch (error) {
+        console.error('Error creating audio:', error);
+        alert('Failed to load audio file.');
+    }
 }
 
         async function showLeaderboard() {
@@ -1521,19 +1634,22 @@ function stopRecording() {
             const isPhotoFilter = filter === 'photos';
             
             // Display coins
-            if (filter === 'all' || filter === 'coins' || ['birdie', 'eagle', 'hotStreak', 'story'].includes(filter)) {
+            if (filter === 'all' || filter === 'coins' || ['birdie', 'eagle', 'hotStreak', 'story', 'birthday'].includes(filter)) {
                 Object.entries(players).forEach(([playerName, player]) => {
                     player.coins.forEach(coin => {
                         const coinType = COIN_TYPES[coin.type];
                         
                         // Show if: all, OR matching coin type, OR 'coins' filter showing all coins
+                        // Note: 'story' filter should also show 'birthday' type (audio messages)
                         const shouldShow = filter === 'all' || 
                                           coin.type === filter || 
+                                          (filter === 'story' && coin.type === 'birthday') ||
                                           isCoinFilter;
                         
                         if (shouldShow) {
                             const item = document.createElement('div');
                             item.className = 'gallery-item';
+                            const mimeType = coin.mimeType || 'audio/webm';
                             item.innerHTML = `
                                 <div class="coin ${coinType.accent} ${playerName.toLowerCase() === 'ray' ? 'ray-special' : ''}" style="width: 80px; height: 80px; margin: 0 auto 10px;">
                                     <img src="${RAY_PHOTO}" alt="coin">
@@ -1541,7 +1657,7 @@ function stopRecording() {
                                 <div style="font-weight: 600; color: #1a3a5c;">${playerName}</div>
                                 <div style="font-size: 0.9rem; color: #666;">${coinType.name}</div>
                                 <div style="font-size: 0.8rem; color: #999;">${new Date(coin.timestamp).toLocaleString()}</div>
-                                ${coin.audio ? `<button class="btn" style="margin-top: 10px; padding: 5px 15px; font-size: 0.85rem;" onclick="playAudio('${coin.audio}')">▶ Play Message</button>` : ''}
+                                ${coin.audio ? `<button class="btn" style="margin-top: 10px; padding: 5px 15px; font-size: 0.85rem;" onclick="playAudio('${coin.audio}', '${mimeType}')">▶ Play Message</button>` : ''}
                             `;
                             grid.appendChild(item);
                         }
