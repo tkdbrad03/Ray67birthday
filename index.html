@@ -1408,6 +1408,19 @@ function stopRecording() {
 
        async function startRecording() {
     try {
+        // Check for iOS/Safari - which has limited audio format support
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
+        if (isIOS && isSafari) {
+            // Safari on iOS can only record in WebM but can't play it back!
+            // Show a one-time warning
+            if (!window.safariAudioWarningShown) {
+                window.safariAudioWarningShown = true;
+                alert('⚠️ Safari on iPhone has audio limitations:\n\n• Recordings will work, but may not play back in Safari\n• Others can hear your message on different browsers\n• For best results: use Chrome app on your iPhone\n\nContinuing with recording...');
+            }
+        }
+        
         const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
         if (permissionStatus.state === 'denied') {
             alert("Microphone access is blocked. Please enable it in your browser settings.");
@@ -1539,29 +1552,61 @@ function stopRecording() {
         // Default to webm if no mimeType provided (for backward compatibility)
         const audioMimeType = mimeType || 'audio/webm';
         
-        // Create audio element
-        const audio = new Audio('data:' + audioMimeType + ';base64,' + audioData);
+        console.log('Attempting to play audio with mimeType:', audioMimeType);
+        console.log('Audio data length:', audioData.length);
+        console.log('User agent:', navigator.userAgent);
+        
+        // Check if this browser supports the audio format
+        const audio = document.createElement('audio');
+        const canPlayType = audio.canPlayType(audioMimeType);
+        console.log('Can play type "' + audioMimeType + '":', canPlayType);
+        
+        // If browser can't play this format, show helpful message
+        if (canPlayType === '' || canPlayType === 'no') {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            
+            if (isIOS || isSafari) {
+                alert('This audio was recorded in a format (WebM) that Safari/iOS does not support. Please:\n\n1. Try opening this page in Chrome app on your iPhone, OR\n2. Record new messages - they will use iPhone-compatible format (MP4)');
+            } else {
+                alert('Your browser does not support this audio format (' + audioMimeType + '). Try using a different browser or ask the person to re-record the message.');
+            }
+            return;
+        }
+        
+        // Create audio element with the data
+        const audioElement = new Audio('data:' + audioMimeType + ';base64,' + audioData);
         
         // Add event listeners for better debugging and UX
-        audio.addEventListener('loadstart', () => {
+        audioElement.addEventListener('loadstart', () => {
             console.log('Audio loading started');
         });
         
-        audio.addEventListener('canplay', () => {
+        audioElement.addEventListener('canplay', () => {
             console.log('Audio can play');
         });
         
-        audio.addEventListener('error', (e) => {
+        audioElement.addEventListener('error', (e) => {
             console.error('Audio error:', e);
-            alert('Unable to play audio. This device may not support the audio format. Try on a different browser or device.');
+            console.error('Audio error details:', audioElement.error);
+            
+            const errorMessages = {
+                1: 'The fetching of the audio was aborted',
+                2: 'A network error occurred while fetching the audio',
+                3: 'An error occurred while decoding the audio',
+                4: 'The audio format is not supported'
+            };
+            
+            const errorMsg = audioElement.error ? errorMessages[audioElement.error.code] || 'Unknown error' : 'Unknown error';
+            alert('Unable to play audio: ' + errorMsg + '\n\nFormat: ' + audioMimeType);
         });
         
-        audio.addEventListener('ended', () => {
+        audioElement.addEventListener('ended', () => {
             console.log('Audio playback ended');
         });
         
         // Attempt to play
-        const playPromise = audio.play();
+        const playPromise = audioElement.play();
         
         if (playPromise !== undefined) {
             playPromise
@@ -1575,7 +1620,7 @@ function stopRecording() {
                     if (error.name === 'NotAllowedError') {
                         alert('Please tap the play button again. Your browser requires user interaction to play audio.');
                     } else if (error.name === 'NotSupportedError') {
-                        alert('Your device does not support this audio format. Try using Chrome or Firefox.');
+                        alert('Your device does not support this audio format (' + audioMimeType + ').\n\nSuggestions:\n• Try Chrome app instead of Safari\n• Record new messages (will use MP4 format)');
                     } else {
                         alert('Unable to play audio: ' + error.message);
                     }
@@ -1583,7 +1628,7 @@ function stopRecording() {
         }
     } catch (error) {
         console.error('Error creating audio:', error);
-        alert('Failed to load audio file.');
+        alert('Failed to load audio file: ' + error.message);
     }
 }
 
