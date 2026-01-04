@@ -1282,11 +1282,19 @@ photosSection +
             // Count coins
             let totalCoins = 0;
 Object.values(players).forEach(player => {
-    totalCoins += player.coins.reduce((sum, coin) => {
-        const coinDef = COIN_TYPES[coin.type] || { value: 1 };
-        return sum + coinDef.value;
-    }, 0);
+  totalCoins += player.coins.reduce((sum, coin) => {
+    const coinDef = COIN_TYPES[coin.type] || { value: 1 };
+    return sum + coinDef.value;
+  }, 0);
 });
+
+// Update Ray's birthday goal progress
+const goal = 67;
+document.getElementById("totalCoins").textContent = totalCoins;
+document.getElementById("goalPercentage").textContent = `${Math.round((totalCoins / goal) * 100)}% there!`;
+document.getElementById("progressBar").style.width = `${Math.min((totalCoins / goal) * 100, 100)}%`;
+
+
 
             
             // Update display
