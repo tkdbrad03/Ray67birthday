@@ -938,12 +938,13 @@ const RAY_PHOTO = 'https://rays67birthday.complitrst.com/Ray-photo.png';
         const COIN_GOAL = 67;
 
         const COIN_TYPES = {
-            birdie: { name: 'Birdie Coin', accent: 'blue', value: 1 },
-            eagle: { name: 'Eagle Coin', accent: 'purple', value: 1 },
-            hotStreak: { name: 'Hot Streak Coin', accent: 'orange', value: 1 },
-            birthday: { name: 'Birthday Wishes', accent: 'gold', value: 2 },
-            ray: { name: 'Birthday Legend', accent: 'gold', value: 1 }
-        };
+    birdie: { name: 'Birdie Coin', accent: 'blue', value: 1 },
+    eagle: { name: 'Eagle Coin', accent: 'purple', value: 1 },
+    hotStreak: { name: 'Hot Streak Coin', accent: 'orange', value: 1 },
+    birthday: { name: 'Birthday Wishes', accent: 'gold', value: 2 },
+    ray: { name: 'Birthday Legend', accent: 'gold', value: 1 }
+};
+
 
         let currentUser = null;
         let isAdmin = false;
@@ -1280,9 +1281,13 @@ photosSection +
             
             // Count coins
             let totalCoins = 0;
-            Object.values(players).forEach(player => {
-                totalCoins += player.coins.length;
-            });
+Object.values(players).forEach(player => {
+    totalCoins += player.coins.reduce((sum, coin) => {
+        const coinDef = COIN_TYPES[coin.type] || { value: 1 };
+        return sum + coinDef.value;
+    }, 0);
+});
+
             
             // Update display
             const totalCoinsEl = document.getElementById('totalCoins');
@@ -1637,10 +1642,11 @@ function stopRecording() {
             const players = data.players || {};
             
             const leaderboard = Object.entries(players).map(([name, player]) => ({
-                name,
-                count: player.coins.length,
-                value: player.coins.reduce((sum, coin) => sum + COIN_TYPES[coin.type].value, 0)
-            })).sort((a, b) => b.value - a.value);
+    name,
+    count: player.coins.length,
+    value: player.coins.reduce((sum, coin) => sum + (COIN_TYPES[coin.type]?.value || 1), 0)
+})).sort((a, b) => b.value - a.value);
+
             
             const html = leaderboard.map((player, index) => `
                 <div class="leaderboard-item">
