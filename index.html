@@ -1645,30 +1645,66 @@ function stopRecording() {
     }
 }
 
-        async function showLeaderboard() {
-            const data = await getData();
-            const players = data.players || {};
-            
-            const leaderboard = Object.entries(players).map(([name, player]) => ({
-    name,
-    count: player.coins.length,
-    value: player.coins.reduce((sum, coin) => sum + (COIN_TYPES[coin.type]?.value || 1), 0)
-})).sort((a, b) => b.value - a.value);
+        function showLeaderboard() {
+    db.collection("golfData").doc("live").get().then((doc) => {
+        const players = doc.data().players || {};
 
-            
-            const html = leaderboard.map((player, index) => `
-                <div class="leaderboard-item">
-                    <div class="leaderboard-rank">${index + 1}</div>
-                    <div class="leaderboard-info">
-                        <div class="leaderboard-name">${player.name}</div>
-                        <div class="leaderboard-stats">${player.count} coins • ${player.value} points</div>
-                    </div>
+        const leaderboard = Object.entries(players).map(([name, player]) => {
+            const coinCounts = {};
+            let totalCoins = 0;
+
+            player.coins.forEach(coin => {
+                const type = coin.type;
+                const coinDef = COIN_TYPES[type] || { name: 'Unknown', value: 1 };
+
+                coinCounts[type] = (coinCounts[type] || 0) + 1;
+                totalCoins += coinDef.value;
+            });
+
+            // Build readable label: "Birdie, Eagle & Birthday Wish"
+            const labelParts = Object.entries(coinCounts).map(([type, count]) => {
+                const coinName = COIN_TYPES[type]?.name || type;
+
+                // Pluralize only if > 1 and not 'Birthday Wishes'
+                if (coinName === 'Birthday Wishes' || count === 1) {
+                    return coinName;
+                } else {
+                    return `${count} ${coinName}${coinName.endsWith('s') ? 'es' : 's'}`;
+                }
+            });
+
+            let displayLabel = '';
+            if (labelParts.length === 1) {
+                displayLabel = `${labelParts[0]}`;
+            } else if (labelParts.length === 2) {
+                displayLabel = `${labelParts[0]} & ${labelParts[1]}`;
+            } else {
+                displayLabel = `${labelParts.slice(0, -1).join(', ')} & ${labelParts.slice(-1)}`;
+            }
+
+            return {
+                name,
+                label: `${displayLabel} • ${totalCoins} coin${totalCoins !== 1 ? 's' : ''}`
+            };
+        }).sort((a, b) => {
+            // Sort by coin total descending
+            const getTotal = player => parseInt(player.label.match(/(\d+) coins?/)[1]);
+            return getTotal(b) - getTotal(a);
+        });
+
+        const list = document.getElementById("leaderboardList");
+        list.innerHTML = leaderboard.map((entry, i) => `
+            <div class="leaderboard-row">
+                <div>${i + 1}</div>
+                <div>
+                    <strong>${entry.name}</strong>
+                    <div class="leaderboard-label">${entry.label}</div>
                 </div>
-            `).join('');
-            
-            document.getElementById('leaderboardList').innerHTML = html || '<p style="text-align: center; color: #999;">No coins collected yet</p>';
-            showScreen('leaderboardScreen');
-        }
+            </div>
+        `).join('');
+    });
+}
+
 
         function showGallery() {
             showScreen('galleryScreen');
